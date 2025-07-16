@@ -1,8 +1,5 @@
-// Components/SavedList.js
-
-import React, { useContext , useState } from 'react';
+import React, { useContext, useState } from 'react';
 import {
-  SafeAreaView,
   View,
   Text,
   FlatList,
@@ -10,9 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-
 } from 'react-native';
-
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -26,14 +21,13 @@ export default function SavedList() {
   const nav = useNavigation();
   const { saved, toggle } = useContext(SavedContext);
   const [textWidth, setTextWidth] = useState(0);
+
   const isEmpty = saved.length === 0;
 
   const renderSpot = ({ item: spot }) => (
     <View style={styles.card}>
-      {/* Фото места */}
       <Image source={spot.img} style={styles.photo} />
 
-      {/* Кнопка-сердечко */}
       <TouchableOpacity
         style={styles.heartBtn}
         onPress={() => toggle(spot)}
@@ -45,10 +39,9 @@ export default function SavedList() {
         />
       </TouchableOpacity>
 
-      {/* Инфо-блок */}
       <View style={styles.info}>
         <View style={styles.titleRow}>
-        <Text
+          <Text
             style={styles.name}
             onLayout={e => setTextWidth(e.nativeEvent.layout.width)}
           >
@@ -57,7 +50,6 @@ export default function SavedList() {
         </View>
 
         <View style={[styles.underline, { width: textWidth }]} />
-    
 
         <View style={styles.row}>
           <Text style={styles.label}>Rating:</Text>
@@ -70,7 +62,6 @@ export default function SavedList() {
           ))}
         </View>
 
-        {/* Кнопка «Read more» */}
         <TouchableOpacity
           onPress={() => nav.navigate('LocationDetails', { spot })}
           activeOpacity={0.8}
@@ -91,7 +82,7 @@ export default function SavedList() {
 
   return (
     <View style={styles.container}>
-      {/* Заголовок по стилям RecommendedList */}
+      {/* Header */}
       <View style={styles.headerWrapper}>
         <LinearGradient
           colors={['#BE9E77', '#633D0F']}
@@ -111,9 +102,7 @@ export default function SavedList() {
 
       {isEmpty ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            You have no saved locations yet.
-          </Text>
+          <Text style={styles.emptyText}>You have no saved locations yet.</Text>
         </View>
       ) : (
         <FlatList

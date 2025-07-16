@@ -1,4 +1,3 @@
-// Components/RecommendedList.js
 import React, { useContext, useMemo, useCallback, useState } from 'react';
 import {
   View,
@@ -19,6 +18,7 @@ const { width } = Dimensions.get('window');
 const CARD_HEIGHT = 220;
 const CARD_BORDER_RADIUS = 10;
 
+/* ---------- Карточка списка ---------- */
 const SpotItem = React.memo(function SpotItem({ spot, isSaved, toggleSave }) {
   const nav = useNavigation();
   const [textWidth, setTextWidth] = useState(0);
@@ -65,13 +65,12 @@ const SpotItem = React.memo(function SpotItem({ spot, isSaved, toggleSave }) {
           ))}
         </View>
 
-        {/* Обёртка для центрирования кнопки */}
         <TouchableOpacity
           onPress={() => nav.navigate('LocationDetails', { spot })}
           activeOpacity={0.8}
-          style={styles.readBtnWrapper}    // ← добавили выравнивание по центру
+          style={styles.readBtnWrapper}
         >
-          <LinearGradient               // ← градиент вместо простого фона
+          <LinearGradient
             colors={['#BE9E77', '#633D0F']}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
@@ -83,16 +82,18 @@ const SpotItem = React.memo(function SpotItem({ spot, isSaved, toggleSave }) {
       </View>
     </View>
   );
-}, (prev, next) => {
-  return prev.spot.id === next.spot.id && prev.isSaved === next.isSaved;
-});
+}, (prev, next) => prev.spot.id === next.spot.id && prev.isSaved === next.isSaved);
 
+/* ---------- Список ---------- */
 export default function RecommendedList() {
   const nav = useNavigation();
-  const { saved, toggle } = useContext(SavedContext);
+  const { saved, toggle, isSaved } = useContext(SavedContext);
+
+  // только рекомендованные
   const spots = useMemo(() => SPOTS.recommended, []);
-  const isSaved = useCallback(id => saved.some(p => p.id === id), [saved]);
+
   const toggleSave = useCallback(spot => toggle(spot), [toggle]);
+
   const renderItem = useCallback(
     ({ item }) => (
       <SpotItem
@@ -106,6 +107,7 @@ export default function RecommendedList() {
 
   return (
     <View style={styles.container}>
+      {/* Хедер */}
       <View style={styles.headerWrapper}>
         <LinearGradient
           colors={['#BE9E77', '#633D0F']}
@@ -127,7 +129,7 @@ export default function RecommendedList() {
         data={spots}
         keyExtractor={s => s.id}
         renderItem={renderItem}
-        extraData={saved}
+        extraData={saved} // важно: чтобы перечерчивать иконки при изменении saved
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
       />
