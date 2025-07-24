@@ -1,6 +1,5 @@
 // Components/Onboarding.js
-
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -40,6 +39,15 @@ const slides = [
 export default function Onboarding() {
   const navigation = useNavigation();
   const { width, height } = useWindowDimensions();
+
+  // Флаги устройств
+  const flags = useMemo(() => ({
+    isSE:  height <= 667 && width <= 375,    // iPhone SE / компактные
+    isMax: height >= 926 || width >= 428,    // 15 Pro Max / большие
+  }), [width, height]);
+
+  const styles = useMemo(() => makeStyles(width, height, flags), [width, height, flags]);
+
   const flatListRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -56,11 +64,10 @@ export default function Onboarding() {
 
   return (
     <View style={styles.container}>
-      {/* прозрачный статус-бар */}
       <StatusBar translucent barStyle="light-content" backgroundColor="transparent" />
 
       <FlatList
-        ref={ref => (flatListRef.current = ref)}
+        ref={flatListRef}
         data={slides}
         keyExtractor={item => item.key}
         horizontal
@@ -72,17 +79,17 @@ export default function Onboarding() {
         renderItem={({ item }) => (
           <ImageBackground
             source={require('../assets/bg_onboarding.png')}
-            style={[styles.bg, { width, height:820}]}
+            style={[styles.bg, { width, height: flags.isSE ? 820 : height }]} // «прикол» для SE
             resizeMode="cover"
           >
-            {/* Персонаж Max */}
+            {/* Персонаж / картинка слайдов */}
             <Image
               source={item.img}
               style={[styles.hero, { height: height * 0.78 }]}
               resizeMode="contain"
             />
 
-            {/* Текстовая карточка с рамкой */}
+            {/* Текстовая карточка */}
             <View style={[styles.cardWrap, { width: width * 0.87 }]}>
               <View style={styles.cardInner}>
                 <Text style={styles.title}>{item.title}</Text>
@@ -91,11 +98,7 @@ export default function Onboarding() {
             </View>
 
             {/* Кнопка «Далее» */}
-            <TouchableOpacity
-              onPress={handleNext}
-              activeOpacity={0.8}
-              style={styles.nextBtn}
-            >
+            <TouchableOpacity onPress={handleNext} activeOpacity={0.8} style={styles.nextBtn}>
               <Image
                 source={require('../assets/arrow.png')}
                 style={styles.nextIcon}
@@ -111,65 +114,77 @@ export default function Onboarding() {
 
 const BORDER_RADIUS = 16;
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
+/* ───────────────────────── STYLES ───────────────────────── */
+function makeStyles(w, h, { isSE, isMax }) {
+  // bg tweaks
+  const BG_MT = isMax ? 80 : 0; // как в твоей max-версии marginTop:80
+  // hero tweaks
+  const HERO_TOP  = -10;
+  const HERO_LEFT = -10;
 
-  bg: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
+  // карточка и кнопка
+  const CARD_BOTTOM = isSE ? 210 : isMax ? 260 : 230;
+  const NEXT_BOTTOM = isSE ? 150 : isMax ? 180 : 165;
 
-  hero: {
-    position: 'absolute',
-    top: -10,
-    width: '100%',
-    left: -10,
-  },
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: '#000',
+    },
 
-  cardWrap: {
-    position: 'absolute',
-    bottom: 230,
-    alignSelf: 'center',
-    alignItems: 'center',
-  },
+    bg: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      marginTop: BG_MT,
+    },
 
-  cardInner: {
-    backgroundColor: '#262626',
-    borderRadius: BORDER_RADIUS,
-    padding: 20,
+    hero: {
+      position: 'absolute',
+      top: HERO_TOP,
+      width: '100%',
+      left: HERO_LEFT,
+    },
 
-    // вот здесь наносим рамку
-    borderWidth: 2,
-    borderColor: '#4E0202',
-  },
+    cardWrap: {
+      position: 'absolute',
+      bottom: CARD_BOTTOM,
+      alignSelf: 'center',
+      alignItems: 'center',
+    },
 
-  title: {
-    color: '#FFF',
-    fontSize: 20,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
+    cardInner: {
+      backgroundColor: '#262626',
+      borderRadius: BORDER_RADIUS,
+      padding: 20,
+      borderWidth: 2,
+      borderColor: '#4E0202',
+    },
 
-  text: {
-    color: '#FFF',
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
+    title: {
+      color: '#FFF',
+      fontSize: isSE ? 18 : 20,
+      fontWeight: '700',
+      textAlign: 'center',
+      marginBottom: 8,
+    },
 
-  nextBtn: {
-    position: 'absolute',
-    bottom: 165,
-    alignSelf: 'center',
-  },
+    text: {
+      color: '#FFF',
+      fontSize: isSE ? 15 : 16,
+      textAlign: 'center',
+      lineHeight: isSE ? 20 : 22,
+    },
 
-  nextIcon: {
-    width: 200,
-    height: 58,
-  },
-});
+    nextBtn: {
+      position: 'absolute',
+      bottom: NEXT_BOTTOM,
+      alignSelf: 'center',
+    },
+
+    nextIcon: {
+      width: 200,
+      height: 58,
+    },
+  });
+}

@@ -26,7 +26,7 @@ import { SavedContext } from './SavedContext';
 
 const { width } = Dimensions.get('window');
 const POPUP_W   = width * 0.86; // унифицированно с другими экранами
-const HEADER_H  = 90;
+const HEADER_H  = 120;
 
 const ICON_BACK  = require('../assets/BackArrow.png');
 const ICON_PIN   = require('../assets/pin.png');
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: HEADER_H,
   },
-  backBtn: { padding: 20 },
+  backBtn: { padding: 20, marginTop:30, },
   backIcon:{ width: 24, height: 24, resizeMode: 'contain' },
   headerTitle: {
     flex: 1,
@@ -333,7 +333,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 20,
     fontWeight: '700',
-    left: -20,
+    left: -34,
+    marginTop:30,
   },
 
   /* блок зума (нижний правый угол) */

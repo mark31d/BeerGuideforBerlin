@@ -1,14 +1,23 @@
 // Components/Loader.js
-import React, { useEffect } from 'react';
-import { View, ImageBackground, Image, StyleSheet, Image as RNImage } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import {
+  View,
+  ImageBackground,
+  Image,
+  StyleSheet,
+  Image as RNImage,
+  useWindowDimensions,
+} from 'react-native';
 import { WebView } from 'react-native-webview';
 
 export default function Loader({ onFinish, delay = 1 }) {
   const mugUri = RNImage.resolveAssetSource(require('../assets/mug.png')).uri;
+  const { width, height } = useWindowDimensions();
+  const styles = useMemo(() => makeStyles(width, height), [width, height]);
 
   useEffect(() => {
     if (!onFinish) return;
-    const t = setTimeout(onFinish, delay);
+    const t = setTimeout(onFinish, delay); // delay в мс, если нужно в секундах — умножь на 1000
     return () => clearTimeout(t);
   }, [onFinish, delay]);
 
@@ -38,7 +47,6 @@ export default function Loader({ onFinish, delay = 1 }) {
   }
   .mug.r {
     right: 0;
-    /* зеркально */
     transform: scaleX(-1);
     animation: bobRight 2.4s infinite ease-in-out;
   }
@@ -51,17 +59,13 @@ export default function Loader({ onFinish, delay = 1 }) {
     filter: blur(2px);
     animation: shadowPulse 2.4s infinite ease-in-out;
   }
-
   @keyframes bobLeft {
     0%,100% { transform: translateY(0) rotateZ(0deg); }
     50%     { transform: translateY(-35px) rotateZ(10deg) translateX(8px); }
   }
   @keyframes bobRight {
     0%,100% { transform: scaleX(-1) translateY(0) rotateZ(0deg); }
-    50%     { 
-      /* поднимаем на ту же высоту, но наклоняем влево */
-      transform: scaleX(-1) translateY(-35px) rotateZ(10deg) translateX(8px);
-    }
+    50%     { transform: scaleX(-1) translateY(-35px) rotateZ(10deg) translateX(8px); }
   }
   @keyframes shadowPulse {
     0%,100% { transform: translateX(-50%) scale(0.6); opacity:0.6; }
@@ -115,27 +119,54 @@ export default function Loader({ onFinish, delay = 1 }) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#000' },
-  bg:   { flex: 1, justifyContent: 'center', alignItems: 'center' },
+/* ───────────────────────── STYLES ───────────────────────── */
+function makeStyles(w, h) {
+  const isSE  = (h <= 667 && w <= 375);     // iPhone SE/старые
+  const isMax = (h >= 926 || w >= 428);     // 15 Pro Max и т.п.
 
-  logoContainer: {
-    position: 'absolute',
-    top: 40,
-    alignItems: 'center',
-  },
-  logo:      { width: 160, height: 160 },
-  guide:     {
-    position: 'absolute',
-    bottom: -440,
-    width: '100%',
-    aspectRatio: 0.55,
-  },
-  webWrap:   {
-    position: 'absolute',
-    bottom: 40,
-    width: 240,
-    height: 160,
-  },
-  webView:   { flex: 1, backgroundColor: 'transparent' , },
-});
+  // Можно дополнительно использовать vw/vh, но здесь фиксируем ключевые сдвиги:
+  const LOGO_W = isSE ? 140 : isMax ? 200 : 160;
+  const LOGO_H = LOGO_W;
+  const LOGO_TOP = isSE ? 32 : 40;
+
+  // Гид (guide)
+  // Твои значения:
+  //  - SE: bottom: -440, aspectRatio: 0.55
+  //  - Max: bottom: -440 + marginBottom: 130 (по факту сдвиг вверх)
+  const GUIDE_BOTTOM = -440;
+  const GUIDE_MB     = isMax ? 130 : 0; // только для Max добавляем marginBottom
+  const GUIDE_AR     = 0.55;            // как у тебя
+
+  // Блок с WebView
+  const WEB_BOTTOM = isSE ? 32 : 40;
+  const WEB_W = 240;
+  const WEB_H = 160;
+
+  return StyleSheet.create({
+    root: { flex: 1, backgroundColor: '#000' },
+    bg:   { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
+    logoContainer: {
+      position: 'absolute',
+      top: LOGO_TOP,
+      alignItems: 'center',
+    },
+    logo: { width: LOGO_W, height: LOGO_H },
+
+    guide: {
+      position: 'absolute',
+      bottom: GUIDE_BOTTOM,
+      width: '100%',
+      aspectRatio: GUIDE_AR,
+      marginBottom: GUIDE_MB,
+    },
+
+    webWrap: {
+      position: 'absolute',
+      bottom: WEB_BOTTOM,
+      width: WEB_W,
+      height: WEB_H,
+    },
+    webView: { flex: 1, backgroundColor: 'transparent' },
+  });
+}

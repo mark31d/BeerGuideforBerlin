@@ -148,10 +148,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 90,
+    height: 120,
+    
   },
-  backBtn: { padding: 20 },
-  backIcon: { width: 24, height: 24, resizeMode: 'contain' },
+  backBtn: { padding: 20 , marginTop:30,},
+  backIcon: { width: 24, height: 24, resizeMode: 'contain' ,  },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
@@ -159,6 +160,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     left: -20,
+    marginTop:30,
   },
 
   listContent: {

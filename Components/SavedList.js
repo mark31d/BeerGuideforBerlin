@@ -128,9 +128,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 90,                 // ← как в RecommendList
+    height: 120,                 // ← как в RecommendList
   },
-  backBtn: { padding: 20 },     // ← как в RecommendList
+  backBtn: { padding: 20 , marginTop:30, },     // ← как в RecommendList
   backIcon: { width: 24, height: 24, resizeMode: 'contain' },
   headerTitle: {
     flex: 1,
@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
     fontSize: 20,               // ← как в RecommendList
     fontWeight: '700',
     left: -20,                  // ← как в RecommendList
+    marginTop:30,
   },
   underline: {
     height: 2,
