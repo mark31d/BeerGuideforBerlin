@@ -34,7 +34,7 @@ workflows:
           echo "NEXT_BUILD=$NEXT" >> $CM_ENV_FILE
           echo "NEXT_BUILD=$NEXT"
 
-      - name: Set CFBundleVersion in Info.plist
+      - name: Bump CFBundleVersion
         script: |
           PLIST_PATH="$CM_BUILD_DIR/ios/BeerGuideforBerlin/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEXT_BUILD" "$PLIST_PATH" || \
@@ -51,13 +51,14 @@ workflows:
         script: |
           xcode-project build-ipa \
             --workspace "$CM_BUILD_DIR/ios/$XCODE_WORKSPACE" \
-            --scheme "$CODE_SCHEME" \
-            --build-number "$NEXT_BUILD"
+            --scheme "$CODE_SCHEME"
 
       - name: Verify CFBundleVersion in IPA
         script: |
           IPA_PATH=$(ls build/ios/ipa/*.ipa | head -n 1)
-          unzip -p "$IPA_PATH" "Payload/BeerGuideforBerlin.app/Info.plist" | plutil -p - | grep CFBundleVersion
+          unzip -p "$IPA_PATH" "Payload/BeerGuideforBerlin.app/Info.plist" \
+            | plutil -p - \
+            | grep CFBundleVersion
 
     artifacts:
       - build/ios/ipa/*.ipa
