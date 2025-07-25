@@ -10,48 +10,61 @@ workflows:
         bundle_identifier: com.BeerGuideforBerlin
       vars:
         APP_STORE_APPLE_ID: 6749101842
-        BUNDLE_ID: com.BeerGuideforBerlin
         XCODE_WORKSPACE: BeerGuideforBerlin.xcworkspace
         CODE_SCHEME: BeerGuideforBerlin
     scripts:
       - name: Install node modules
         script: |
           npm install
+
       - name: Install CocoaPods dependencies
         script: |
-          cd ios && pod install
-      - name: Set up provisioning profile settings on Xcode project
+          cd ios
+          pod install
+
+      - name: Use provisioning profiles
         script: |
           cd ios
           xcode-project use-profiles
-      - name: Bump CFBundleVersion via PlistBuddy
+
+      - name: Get NEXT_BUILD
         script: |
           LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" || echo 0)
           NEXT=$((LATEST + 1))
+          echo "NEXT_BUILD=$NEXT" >> $CM_ENV_FILE
+          echo "NEXT_BUILD=$NEXT"
+
+      - name: Set CFBundleVersion in Info.plist
+        script: |
           PLIST_PATH="$CM_BUILD_DIR/ios/BeerGuideforBerlin/Info.plist"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEXT" "$PLIST_PATH"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEXT_BUILD" "$PLIST_PATH" || \
+          /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $NEXT_BUILD" "$PLIST_PATH"
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST_PATH"
+
       - name: Add ITSAppUsesNonExemptEncryption
         script: |
           PLIST_PATH="$CM_BUILD_DIR/ios/BeerGuideforBerlin/Info.plist"
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST_PATH" || \
           /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST_PATH"
+
       - name: Build ipa for distribution
         script: |
           xcode-project build-ipa \
             --workspace "$CM_BUILD_DIR/ios/$XCODE_WORKSPACE" \
-            --scheme "$CODE_SCHEME"
+            --scheme "$CODE_SCHEME" \
+            --build-number "$NEXT_BUILD"
+
       - name: Verify CFBundleVersion in IPA
         script: |
           IPA_PATH=$(ls build/ios/ipa/*.ipa | head -n 1)
-          unzip -p "$IPA_PATH" "Payload/BeerGuideforBerlin.app/Info.plist" \
-            | plutil -p - \
-            | grep CFBundleVersion
+          unzip -p "$IPA_PATH" "Payload/BeerGuideforBerlin.app/Info.plist" | plutil -p - | grep CFBundleVersion
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
       - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
     publishing:
       app_store_connect:
         auth: integration
