@@ -20,36 +20,28 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
-      - name: Set up provisioning profile settings on Xcode project
+      - name: Set up provisioning profile settings on  Xcode project
         script: |
           cd ios
           xcode-project use-profiles
-      - name: Bump CFBundleVersion via PlistBuddy
+      - name: Increment build number
         script: |
-          cd $CM_BUILD_DIR
-          LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
-          NEXT=$((LATEST + 1))
-          PLIST="ios/BeerGuideforBerlin/Info.plist"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEXT" "$PLIST"
-          echo "After bump:"
-          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST"
-
-      - name: Verify CFBundleVersion in IPA
+          #!/bin/sh
+          cd $CM_BUILD_DIR/ios
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
+          agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
+      - name: Set Info.plist values
         script: |
-          unzip -p build/ios/ipa/*.ipa \
-            "Payload/BeerGuideforBerlin.app/Info.plist" \
-            | plutil -p - \
-            | grep CFBundleVersion
-      - name: Add ITSAppUsesNonExemptEncryption
-        script: |
-          cd ios
-          PLIST="BeerGuideforBerlin/Info.plist"
-          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
+          #!/bin/sh
+          PLIST=$CM_BUILD_DIR/$XCODE_SCHEME/Info.plist
+          PLIST_BUDDY=/usr/libexec/PlistBuddy
+          $PLIST_BUDDY -c "Add :ITSAppUsesNonExemptEncryption bool false" $PLIST
       - name: Build ipa for distribution
         script: |
+          #!/bin/sh
           xcode-project build-ipa \
             --workspace "$CM_BUILD_DIR/ios/$XCODE_WORKSPACE" \
-            --scheme "$CODE_SCHEME"
+            --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
