@@ -26,12 +26,20 @@ workflows:
           xcode-project use-profiles
       - name: Bump CFBundleVersion via PlistBuddy
         script: |
-          cd ios
+          cd $CM_BUILD_DIR
           LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
           NEXT=$((LATEST + 1))
-          PLIST="BeerGuideforBerlin/Info.plist"
+          PLIST="ios/BeerGuideforBerlin/Info.plist"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEXT" "$PLIST"
+          echo "After bump:"
           /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$PLIST"
+
+      - name: Verify CFBundleVersion in IPA
+        script: |
+          unzip -p build/ios/ipa/*.ipa \
+            "Payload/BeerGuideforBerlin.app/Info.plist" \
+            | plutil -p - \
+            | grep CFBundleVersion
       - name: Add ITSAppUsesNonExemptEncryption
         script: |
           cd ios
